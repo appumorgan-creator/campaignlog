@@ -50,8 +50,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', background:'#f9f9f9', fontFamily:"'Inter',sans-serif", padding:'32px 20px' }}>
-      <div style={{ maxWidth:1000, margin:'0 auto' }}>
+    <div style={{ padding:'32px 28px' }}>
+      <div style={{ maxWidth:960, margin:'0 auto' }}>
 
         <div style={{ marginBottom:28, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
@@ -62,12 +62,9 @@ export default async function DashboardPage() {
               {ws?.name} · {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
             </p>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <a href="/dashboard/analytics" style={{ fontSize:13, color:'#4f46e5', textDecoration:'none', fontWeight:500 }}>Analytics →</a>
-            <a href="/dashboard/log" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'0 16px', height:38, background:'#4f46e5', color:'#fff', borderRadius:8, fontSize:13, fontWeight:500, textDecoration:'none' }}>
-              + Log change
-            </a>
-          </div>
+          <a href="/dashboard/log" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'0 16px', height:38, background:'#4f46e5', color:'#fff', borderRadius:8, fontSize:13, fontWeight:500, textDecoration:'none' }}>
+            + Log change
+          </a>
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:20 }}>
