@@ -38,7 +38,7 @@ export default function NewCampaignPage() {
     const { error: insertError } = await supabase
       .from('campaigns')
       .insert({
-        workspace_id: profile.workspace_id,
+        workspace_id: profile!.workspace_id,
         created_by: user.id,
         name: form.name,
         channel: form.channel || null,
