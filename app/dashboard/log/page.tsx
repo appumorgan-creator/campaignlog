@@ -76,7 +76,7 @@ export default function LogChangePage() {
     const { error: insertError } = await supabase
       .from('change_logs')
       .insert({
-        workspace_id: profile!.workspace_id,
+        workspace_id: profile?.workspace_id ?? "",
         campaign_id: form.campaign_id,
         created_by: user.id,
         change_type: form.change_type,
