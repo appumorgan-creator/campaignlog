@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
@@ -16,7 +15,6 @@ export default async function DashboardPage() {
     .single()
 
   if (!profile?.workspace_id) redirect('/onboarding')
-
   const wid = profile.workspace_id
 
   const [
@@ -44,100 +42,145 @@ export default async function DashboardPage() {
   ])
 
   const ws = (profile as any).workspaces
-  const typeIcons: any = {
+  const typeIcons: Record<string, string> = {
     budget:'💰', creative:'🎨', audience:'🎯', pause:'⏸',
     launch:'🚀', copy:'✏️', targeting:'📍', platform:'🔄', note:'📝'
   }
 
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  })()
+
   return (
-    <div style={{ padding:'32px 28px' }}>
+    <div style={{ padding:'36px 32px', animation:'fadeIn .4s ease' }}>
       <div style={{ maxWidth:960, margin:'0 auto' }}>
 
-        <div style={{ marginBottom:28, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        {/* Header */}
+        <div style={{ marginBottom:32, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
           <div>
-            <h1 style={{ fontSize:22, fontWeight:600, color:'#09090b', letterSpacing:'-0.4px', marginBottom:4 }}>
-              Welcome, {profile.full_name?.split(' ')[0] || 'there'} 👋
+            <h1 style={{ fontSize:26, fontWeight:700, color:'var(--color-text)', letterSpacing:'-0.03em', marginBottom:4, fontFamily:'var(--font-display)' }}>
+              {greeting}, {profile.full_name?.split(' ')[0] || 'there'}
             </h1>
-            <p style={{ fontSize:13, color:'#71717a' }}>
+            <p style={{ fontSize:14, color:'var(--color-text-secondary)', fontFamily:'var(--font-body)' }}>
               {ws?.name} · {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
             </p>
           </div>
-          <a href="/dashboard/log" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'0 16px', height:38, background:'#4f46e5', color:'#fff', borderRadius:8, fontSize:13, fontWeight:500, textDecoration:'none' }}>
-            + Log change
+          <a href="/dashboard/log" style={{
+            display:'inline-flex', alignItems:'center', gap:7, padding:'0 20px', height:40,
+            background:'var(--color-primary)', color:'#fff', borderRadius:'var(--radius)',
+            fontSize:13, fontWeight:600, textDecoration:'none', fontFamily:'var(--font-display)',
+            letterSpacing:'-0.01em', transition:'background .15s',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+            Log change
           </a>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:20 }}>
+        {/* KPI cards */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:24 }}>
           {[
-            { label:'Total changes', value: totalChanges ?? 0, sub:'All time', alert: false },
-            { label:'Active campaigns', value: activeCampaigns ?? 0, sub:'Running now', alert: false },
-            { label:'Team members', value: teamMembers ?? 0, sub:'In workspace', alert: false },
-            { label:'Flagged items', value: flaggedItems ?? 0, sub:'Need review', alert: (flaggedItems ?? 0) > 0 },
-          ].map(k => (
+            { label:'Total changes', value: totalChanges ?? 0, sub:'All time', color:'var(--color-text)' },
+            { label:'Active campaigns', value: activeCampaigns ?? 0, sub:'Running now', color:'var(--color-primary-light)' },
+            { label:'Team members', value: teamMembers ?? 0, sub:'In workspace', color:'var(--color-text)' },
+            { label:'Flagged', value: flaggedItems ?? 0, sub:'Need review', color: (flaggedItems ?? 0) > 0 ? 'var(--color-warning)' : 'var(--color-text-muted)' },
+          ].map((k, i) => (
             <div key={k.label} style={{
-              background: k.alert ? '#fffbeb' : '#fff',
-              border: `1px solid ${k.alert ? '#fde68a' : '#e4e4e7'}`,
-              borderRadius:8, padding:'14px 16px'
+              background:'var(--color-bg-card)', border:'1px solid var(--color-border)',
+              borderRadius:'var(--radius-lg)', padding:'18px 20px',
+              animation:'fadeIn .4s ease', animationDelay:`${i * 60}ms`, animationFillMode:'both',
             }}>
-              <div style={{ fontSize:10, fontWeight:500, color:'#a1a1aa', textTransform:'uppercase', letterSpacing:'.3px', marginBottom:5 }}>{k.label}</div>
-              <div style={{ fontSize:22, fontWeight:600, letterSpacing:'-.5px', color: k.alert ? '#d97706' : '#09090b', lineHeight:1, marginBottom:3 }}>{k.value}</div>
-              <div style={{ fontSize:11, color:'#a1a1aa' }}>{k.sub}</div>
+              <div style={{ fontSize:11, fontWeight:600, color:'var(--color-text-muted)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:8, fontFamily:'var(--font-display)' }}>
+                {k.label}
+              </div>
+              <div style={{ fontSize:28, fontWeight:700, color:k.color, lineHeight:1, marginBottom:4, letterSpacing:'-0.03em', fontFamily:'var(--font-display)' }}>
+                {k.value}
+              </div>
+              <div style={{ fontSize:12, color:'var(--color-text-muted)', fontFamily:'var(--font-body)' }}>{k.sub}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        {/* Two columns */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
 
-          <div style={{ background:'#fff', border:'1px solid #e4e4e7', borderRadius:8, padding:16 }}>
-            <div style={{ fontSize:12, fontWeight:600, color:'#09090b', marginBottom:12, display:'flex', justifyContent:'space-between' }}>
-              Recent activity
-              <a href="/dashboard/changelog" style={{ fontSize:11, fontWeight:400, color:'#4f46e5', textDecoration:'none' }}>View all →</a>
+          {/* Recent activity */}
+          <div style={{
+            background:'var(--color-bg-card)', border:'1px solid var(--color-border)',
+            borderRadius:'var(--radius-lg)', padding:'20px',
+            animation:'fadeIn .4s ease', animationDelay:'250ms', animationFillMode:'both',
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, color:'var(--color-text)', fontFamily:'var(--font-display)', letterSpacing:'-0.01em' }}>Recent activity</h3>
+              <a href="/dashboard/changelog" style={{ fontSize:12, color:'var(--color-primary-light)', textDecoration:'none', fontWeight:500, fontFamily:'var(--font-body)' }}>View all →</a>
             </div>
             {recentChanges && recentChanges.length > 0 ? (
-              recentChanges.map((log: any) => (
-                <div key={log.id} style={{ display:'flex', gap:10, padding:'9px 0', borderBottom:'1px solid #f4f4f5' }}>
-                  <div style={{ width:28, height:28, borderRadius:6, background:'#eef2ff', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:13 }}>
+              recentChanges.map((log: any, i: number) => (
+                <div key={log.id} style={{
+                  display:'flex', gap:12, padding:'10px 0',
+                  borderBottom: i < recentChanges.length - 1 ? '1px solid var(--color-border-light)' : 'none',
+                }}>
+                  <div style={{
+                    width:32, height:32, borderRadius:8, background:'var(--color-bg-badge)',
+                    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:14,
+                  }}>
                     {typeIcons[log.change_type] || '📝'}
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, color:'#09090b', fontWeight:500, lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    <div style={{ fontSize:13, color:'var(--color-text)', fontWeight:500, lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'var(--font-body)' }}>
                       {log.title}
                     </div>
-                    <div style={{ fontSize:10, color:'#a1a1aa', marginTop:2 }}>
+                    <div style={{ fontSize:11, color:'var(--color-text-muted)', marginTop:3, fontFamily:'var(--font-mono)', fontWeight:400 }}>
                       {log.campaigns?.name} · {new Date(log.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div style={{ textAlign:'center', padding:'24px 0', color:'#a1a1aa', fontSize:12 }}>
-                No changes yet. <a href="/dashboard/log" style={{ color:'#4f46e5', textDecoration:'none' }}>Log your first →</a>
+              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--color-text-muted)', fontSize:13 }}>
+                No changes yet. <a href="/dashboard/log" style={{ color:'var(--color-primary-light)', textDecoration:'none', fontWeight:500 }}>Log your first →</a>
               </div>
             )}
           </div>
 
-          <div style={{ background:'#fff', border:'1px solid #e4e4e7', borderRadius:8, padding:16 }}>
-            <div style={{ fontSize:12, fontWeight:600, color:'#09090b', marginBottom:12, display:'flex', justifyContent:'space-between' }}>
-              Campaigns
-              <a href="/dashboard/campaigns/new" style={{ fontSize:11, fontWeight:400, color:'#4f46e5', textDecoration:'none' }}>+ New →</a>
+          {/* Campaigns */}
+          <div style={{
+            background:'var(--color-bg-card)', border:'1px solid var(--color-border)',
+            borderRadius:'var(--radius-lg)', padding:'20px',
+            animation:'fadeIn .4s ease', animationDelay:'300ms', animationFillMode:'both',
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, color:'var(--color-text)', fontFamily:'var(--font-display)', letterSpacing:'-0.01em' }}>Campaigns</h3>
+              <a href="/dashboard/campaigns/new" style={{ fontSize:12, color:'var(--color-primary-light)', textDecoration:'none', fontWeight:500, fontFamily:'var(--font-body)' }}>+ New →</a>
             </div>
             {campaigns && campaigns.length > 0 ? (
-              campaigns.map((c: any) => (
-                <div key={c.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid #f4f4f5' }}>
-                  <div style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: c.status==='active'?'#22c55e':c.status==='paused'?'#a1a1aa':'#f59e0b' }} />
+              campaigns.map((c: any, i: number) => (
+                <div key={c.id} style={{
+                  display:'flex', alignItems:'center', gap:12, padding:'10px 0',
+                  borderBottom: i < campaigns.length - 1 ? '1px solid var(--color-border-light)' : 'none',
+                }}>
+                  <div style={{
+                    width:9, height:9, borderRadius:'50%', flexShrink:0,
+                    background: c.status === 'active' ? 'var(--color-success)' : c.status === 'paused' ? 'var(--color-text-muted)' : 'var(--color-warning)',
+                  }}/>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, fontWeight:500, color:'#09090b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.name}</div>
-                    <div style={{ fontSize:10, color:'#a1a1aa' }}>{c.channel || 'No channel'}</div>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--color-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'var(--font-body)' }}>{c.name}</div>
+                    <div style={{ fontSize:11, color:'var(--color-text-muted)', fontFamily:'var(--font-mono)' }}>{c.channel || 'No channel'}</div>
                   </div>
                   <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:10, color:'#a1a1aa' }}>Health</div>
-                    <div style={{ fontSize:12, fontWeight:600, color: c.health_score>70?'#16a34a':c.health_score>40?'#d97706':'#dc2626' }}>{c.health_score}%</div>
+                    <div style={{ fontSize:10, color:'var(--color-text-muted)', fontFamily:'var(--font-display)', textTransform:'uppercase', letterSpacing:'.04em' }}>Health</div>
+                    <div style={{
+                      fontSize:14, fontWeight:700, fontFamily:'var(--font-display)', letterSpacing:'-0.02em',
+                      color: c.health_score > 70 ? 'var(--color-success)' : c.health_score > 40 ? 'var(--color-warning)' : 'var(--color-danger)',
+                    }}>{c.health_score}%</div>
                   </div>
                 </div>
               ))
             ) : (
-              <div style={{ textAlign:'center', padding:'24px 0', color:'#a1a1aa', fontSize:12 }}>
-                No campaigns yet. <a href="/dashboard/campaigns/new" style={{ color:'#4f46e5', textDecoration:'none' }}>Create first →</a>
+              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--color-text-muted)', fontSize:13 }}>
+                No campaigns yet. <a href="/dashboard/campaigns/new" style={{ color:'var(--color-primary-light)', textDecoration:'none', fontWeight:500 }}>Create first →</a>
               </div>
             )}
           </div>
